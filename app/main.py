@@ -226,7 +226,7 @@ def predict(req: PredictRequest):
     missing = [k for k in feature_names if feature_values.get(k) is None]
     warnings = [f"Missing feature: {m}" for m in missing] if missing else []
 
-    X = pd.DataFrame([{fn: feature_values.get(fn) for fn in feature_names}])
+    X = pd.DataFrame([{fn: feature_values.get(fn) for fn in feature_names}]).astype(float)
 
     model = model_bundle["model"]
     # LightGBM Booster.predict() returns probabilities for multiclass
