@@ -65,6 +65,7 @@ class PredictResponse(BaseModel):
     confidence: float
     forecast_horizon: int
     prediction_date: str
+    probabilities: dict[str, float] = {}
     warnings: list[str] = []
 
 
@@ -232,6 +233,8 @@ def predict(req: PredictRequest):
     label_map = model_bundle.get("label_map", CLASS_LABELS)
     prediction_label = label_map[pred_idx] if pred_idx < len(label_map) else "Hold"
 
+    probabilities = {label_map[i]: round(float(proba[i]), 4) for i in range(min(len(proba), len(label_map)))}
+
     prediction_date = (datetime.now(timezone.utc) + timedelta(days=req.forecast_horizon)).strftime("%Y-%m-%d")
 
     return PredictResponse(
@@ -239,6 +242,7 @@ def predict(req: PredictRequest):
         confidence=round(confidence, 4),
         forecast_horizon=req.forecast_horizon,
         prediction_date=prediction_date,
+        probabilities=probabilities,
         warnings=warnings,
     )
 
