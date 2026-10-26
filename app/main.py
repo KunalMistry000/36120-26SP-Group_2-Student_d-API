@@ -6,7 +6,7 @@ for cryptocurrency assets 7 days into the future.
 
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import joblib
 import numpy as np
@@ -25,7 +25,6 @@ SUPPORTED_TOKENS = ["BTC", "ETH", "XRP", "SOL", "DOGE", "XMR", "XLM", "TRX"]
 
 CLASS_LABELS = ["Strong Sell", "Sell", "Hold", "Buy", "Strong Buy"]
 
-# Teammate API URLs (to be updated with real deployed URLs)
 STUDENT_A_URL = os.getenv("STUDENT_A_API_URL", "")
 STUDENT_B_URL = os.getenv("STUDENT_B_API_URL", "")
 STUDENT_C_URL = os.getenv("STUDENT_C_API_URL", "")
@@ -51,8 +50,6 @@ def startup():
     load_model()
 
 
-# ---------- Pydantic models ----------
-
 class FeaturesRequest(BaseModel):
     token: str
     forecast_horizon: int = Field(default=7, ge=1)
@@ -76,8 +73,6 @@ class FeaturesResponse(BaseModel):
     features: dict
 
 
-# ---------- Helper functions ----------
-
 def fetch_ohlcv(token: str, days: int = 90) -> pd.DataFrame:
     """Fetch daily OHLCV data from Kraken public API."""
     pair_map = {
@@ -89,7 +84,7 @@ def fetch_ohlcv(token: str, days: int = 90) -> pd.DataFrame:
     if not pair:
         return pd.DataFrame()
 
-    since = int((datetime.utcnow() - timedelta(days=days)).timestamp())
+    since = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
     try:
         resp = requests.get(
             "https://api.kraken.com/0/public/OHLC",
@@ -141,8 +136,6 @@ def fetch_features_from_api(url: str, token: str) -> dict:
     return {}
 
 
-# ---------- Endpoints ----------
-
 @app.get("/")
 def root():
     return {
@@ -175,13 +168,10 @@ def features(req: FeaturesRequest):
             detail={"error": "Unsupported cryptocurrency", "supported_tokens": SUPPORTED_TOKENS},
         )
 
-    # For a real deployment, we would fetch live volume data and compute features.
-    # Here we demonstrate the computation pipeline.
     ohlcv = fetch_ohlcv(req.token, days=90)
     if ohlcv.empty:
         raise HTTPException(status_code=503, detail="Unable to fetch market data")
 
-    # Compute volume features from Kraken OHLCV data
     sma20vol = compute_sma20_volume(ohlcv["volume"])
     rel_vol = compute_relative_volume(ohlcv["volume"], sma20vol)
     result = {
@@ -203,7 +193,6 @@ def predict(req: PredictRequest):
     if model_bundle is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
-    # Gather features from other APIs (graceful fallback on failure)
     a_feats = fetch_features_from_api(STUDENT_A_URL, req.token)
     b_feats = fetch_features_from_api(STUDENT_B_URL, req.token)
     c_feats = fetch_features_from_api(STUDENT_C_URL, req.token)
@@ -213,11 +202,9 @@ def predict(req: PredictRequest):
     ma20 = b_feats.get("MA20")
     volatility20 = c_feats.get("Volatility20")
 
-    # My own features
     my_feats_resp = features(FeaturesRequest(token=req.token, forecast_horizon=req.forecast_horizon))
     relative_volume = my_feats_resp.features.get("RelativeVolume")
 
-    # Build feature vector in the order the model expects
     feature_names = model_bundle.get("feature_names", [
         "Return20", "RelativeVolume", "Volatility20", "MA5", "MA20",
     ])
@@ -235,7 +222,6 @@ def predict(req: PredictRequest):
     X = pd.DataFrame([{fn: feature_values.get(fn) for fn in feature_names}]).astype(float)
 
     model = model_bundle["model"]
-    # LightGBM Booster.predict() returns probabilities for multiclass
     proba = model.predict(X)
     if proba.ndim == 1:
         proba = proba.reshape(1, -1)
@@ -246,7 +232,7 @@ def predict(req: PredictRequest):
     label_map = model_bundle.get("label_map", CLASS_LABELS)
     prediction_label = label_map[pred_idx] if pred_idx < len(label_map) else "Hold"
 
-    prediction_date = (datetime.utcnow() + timedelta(days=req.forecast_horizon)).strftime("%Y-%m-%d")
+    prediction_date = (datetime.now(timezone.utc) + timedelta(days=req.forecast_horizon)).strftime("%Y-%m-%d")
 
     return PredictResponse(
         prediction=prediction_label,
@@ -262,7 +248,6 @@ def get_model_metadata():
     if model_metadata is not None:
         return model_metadata
 
-    # Fallback metadata
     return {
         "target": "Trading Opportunity Rating",
         "algorithm": "LightGBM Classifier",
