@@ -54,5 +54,5 @@ docker run -p 8000:8000 tor-api
 
 ## Deployment
 
-- **GitHub:** https://github.com/KunalMistry000/36120-26SP-Group_2-25734346-API
+- **GitHub:** https://github.com/KunalMistry000/36120-26SP-Group_2-Student_d-API
 - **Render:** (to be added after deployment)

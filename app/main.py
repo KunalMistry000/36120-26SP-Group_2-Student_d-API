@@ -150,7 +150,7 @@ def root():
         "description": "Predicts the Trading Opportunity Rating (TOR) of cryptocurrencies 7 days into the future.",
         "algorithm": "LightGBM Classifier",
         "version": "1.0.0",
-        "github": "https://github.com/KunalMistry000/36120-26SP-Group_2-25734346-API",
+        "github": "https://github.com/KunalMistry000/36120-26SP-Group_2-Student_d-API",
         "endpoints": ["/", "/health", "/features", "/predict", "/model-metadata"],
     }
 
