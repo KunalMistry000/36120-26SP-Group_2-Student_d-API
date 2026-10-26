@@ -132,7 +132,7 @@ def fetch_features_from_api(url: str, token: str) -> dict:
         resp = requests.post(
             f"{url}/features",
             json={"token": token, "forecast_horizon": 7},
-            timeout=5,
+            timeout=90,
         )
         if resp.status_code == 200:
             return resp.json().get("features", {})
