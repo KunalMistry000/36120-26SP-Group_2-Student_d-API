@@ -1,0 +1,28 @@
+{
+  "target": "Trading Opportunity Rating",
+  "algorithm": "LightGBM Classifier",
+  "forecast_horizon": 7,
+  "features": [
+    "Return20",
+    "RelativeVolume",
+    "Volatility20",
+    "MA5",
+    "MA20"
+  ],
+  "feature_importance": {
+    "Return20": 0.5926,
+    "RelativeVolume": 0.0754,
+    "Volatility20": 0.176,
+    "MA5": 0.0729,
+    "MA20": 0.0831
+  },
+  "classification_labels": [
+    "Strong Sell",
+    "Sell",
+    "Hold",
+    "Buy",
+    "Strong Buy"
+  ],
+  "test_macro_f1": 0.3997,
+  "test_accuracy": 0.5969
+}

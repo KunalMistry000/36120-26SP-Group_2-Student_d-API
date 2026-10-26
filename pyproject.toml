@@ -1,0 +1,9 @@
+[project]
+name = "tor-api"
+version = "1.0.0"
+description = "Trading Opportunity Rating FastAPI Service (Student D)"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.backends._legacy:_Backend"

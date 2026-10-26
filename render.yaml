@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: tor-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: STUDENT_A_API_URL
+        value: ""
+      - key: STUDENT_B_API_URL
+        value: ""
+      - key: STUDENT_C_API_URL
+        value: ""
+    healthCheckPath: /health

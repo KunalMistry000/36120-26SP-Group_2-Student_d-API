@@ -1,0 +1,8 @@
+pandas==2.2.2
+lightgbm==4.6.0
+fastapi[standard]==0.139.0
+uvicorn==0.50.0
+joblib==1.5.3
+scikit-learn==1.6.1
+requests>=2.31.0
+pydantic>=2.0.0
