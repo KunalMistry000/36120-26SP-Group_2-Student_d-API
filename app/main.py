@@ -158,7 +158,13 @@ def root():
 @app.get("/health")
 def health():
     status = "healthy" if model_bundle is not None else "degraded"
-    return {"status": status, "model_loaded": model_bundle is not None}
+    return {
+        "status": status,
+        "model_loaded": model_bundle is not None,
+        "student_a_url": STUDENT_A_URL[:30] + "..." if STUDENT_A_URL else "",
+        "student_b_url": STUDENT_B_URL[:30] + "..." if STUDENT_B_URL else "",
+        "student_c_url": STUDENT_C_URL[:30] + "..." if STUDENT_C_URL else "",
+    }
 
 
 @app.post("/features")
