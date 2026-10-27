@@ -108,7 +108,7 @@ def fetch_ohlcv(token: str, days: int = 90) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         df["timestamp"] = pd.to_datetime(df["timestamp"].astype(int), unit="s")
         df = df.set_index("timestamp").resample("D").last().dropna()
-        today_midnight = pd.Timestamp.now(tz="UTC").normalize()
+        today_midnight = pd.Timestamp.now(tz="UTC").normalize().tz_localize(None)
         df = df[df.index < today_midnight]
         return df
     except (requests.RequestException, KeyError, ValueError):
@@ -206,11 +206,16 @@ def predict(req: PredictRequest):
     ma20 = b_feats.get("MA20")
     volatility20 = c_feats.get("Volatility20")
 
-    my_feats_resp = features(FeaturesRequest(token=req.token, forecast_horizon=req.forecast_horizon))
-    relative_volume = my_feats_resp.features.get("RelativeVolume")
-
     ohlcv = fetch_ohlcv(req.token, days=90)
-    as_of_date = ohlcv.index[-1].strftime("%Y-%m-%d") if not ohlcv.empty else (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    if ohlcv.empty:
+        relative_volume = None
+        as_of_date = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    else:
+        sma20vol = compute_sma20_volume(ohlcv["volume"])
+        rel_vol = compute_relative_volume(ohlcv["volume"], sma20vol)
+        relative_volume = None if pd.isna(rel_vol.iloc[-1]) else float(rel_vol.iloc[-1])
+        as_of_date = ohlcv.index[-1].strftime("%Y-%m-%d")
 
     feature_names = model_bundle.get("feature_names", [
         "Return20", "RelativeVolume", "Volatility20", "MA5", "MA20",
