@@ -64,6 +64,7 @@ class PredictResponse(BaseModel):
     prediction: str
     confidence: float
     forecast_horizon: int
+    as_of_date: str
     prediction_date: str
     probabilities: dict[str, float] = {}
     warnings: list[str] = []
@@ -107,6 +108,8 @@ def fetch_ohlcv(token: str, days: int = 90) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         df["timestamp"] = pd.to_datetime(df["timestamp"].astype(int), unit="s")
         df = df.set_index("timestamp").resample("D").last().dropna()
+        today_midnight = pd.Timestamp.now(tz="UTC").normalize()
+        df = df[df.index < today_midnight]
         return df
     except (requests.RequestException, KeyError, ValueError):
         return pd.DataFrame()
@@ -206,6 +209,9 @@ def predict(req: PredictRequest):
     my_feats_resp = features(FeaturesRequest(token=req.token, forecast_horizon=req.forecast_horizon))
     relative_volume = my_feats_resp.features.get("RelativeVolume")
 
+    ohlcv = fetch_ohlcv(req.token, days=90)
+    as_of_date = ohlcv.index[-1].strftime("%Y-%m-%d") if not ohlcv.empty else (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+
     feature_names = model_bundle.get("feature_names", [
         "Return20", "RelativeVolume", "Volatility20", "MA5", "MA20",
     ])
@@ -235,12 +241,13 @@ def predict(req: PredictRequest):
 
     probabilities = {label_map[i]: round(float(proba[i]), 4) for i in range(min(len(proba), len(label_map)))}
 
-    prediction_date = (datetime.now(timezone.utc) + timedelta(days=req.forecast_horizon)).strftime("%Y-%m-%d")
+    prediction_date = (pd.Timestamp(as_of_date) + timedelta(days=req.forecast_horizon)).strftime("%Y-%m-%d")
 
     return PredictResponse(
         prediction=prediction_label,
         confidence=round(confidence, 4),
         forecast_horizon=req.forecast_horizon,
+        as_of_date=as_of_date,
         prediction_date=prediction_date,
         probabilities=probabilities,
         warnings=warnings,
