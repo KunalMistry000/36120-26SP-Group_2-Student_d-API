@@ -1,0 +1,28 @@
+{
+  "baseline_macro_f1": 0.1201,
+  "best_optuna_cv_f1": 0.4317,
+  "test_macro_f1": 0.4629,
+  "test_accuracy": 0.5259,
+  "best_params": {
+    "learning_rate": 0.03753769511942898,
+    "num_leaves": 72,
+    "max_depth": 3,
+    "min_child_samples": 51,
+    "feature_fraction": 0.9701717031996913,
+    "bagging_fraction": 0.4048276082618681,
+    "bagging_freq": 2,
+    "lambda_l1": 3.6757810270140365e-06,
+    "lambda_l2": 0.0018029239807896911,
+    "min_split_gain": 0.7352945402147733,
+    "path_smooth": 0.24293785723437214
+  },
+  "n_trials": 300,
+  "feature_importance": {
+    "Return20": 0.6734,
+    "RelativeVolume": 0.0913,
+    "Volatility20": 0.1612,
+    "MA5": 0.0292,
+    "MA20": 0.0448
+  },
+  "data_source": "Binance (+ Kraken for XMR)"
+}

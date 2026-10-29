@@ -1,0 +1,32 @@
+{
+  "target": "Trading Opportunity Rating",
+  "algorithm": "LightGBM Classifier",
+  "forecast_horizon": 7,
+  "features": [
+    "Return20",
+    "RelativeVolume",
+    "Volatility20",
+    "MA5",
+    "MA20"
+  ],
+  "feature_importance": {
+    "Return20": 0.6734,
+    "RelativeVolume": 0.0913,
+    "Volatility20": 0.1612,
+    "MA5": 0.0292,
+    "MA20": 0.0448
+  },
+  "classification_labels": [
+    "Strong Sell",
+    "Sell",
+    "Hold",
+    "Buy",
+    "Strong Buy"
+  ],
+  "test_macro_f1": 0.4629,
+  "test_accuracy": 0.5259,
+  "data_source": "Binance Klines API (+ Kraken for XMR)",
+  "training_date_range": "2017-09-06 to 2026-10-22",
+  "n_train_rows": 19731,
+  "n_test_rows": 3476
+}
